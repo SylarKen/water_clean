@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:v-on="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+        <base th:href="${#request.getContextPath()}+'/'">
+        <!--<script th:src="@{/my/plugins/jquery/dist/jquery.js}"></script>-->
+        <!--<script th:src="@{/my/plugins/bootstrap/bootstrap.js}"></script>-->
+        <!--<link rel="stylesheet" th:href="@{/my/plugins/bootstrap/bootstrap.css}">-->
+        <link rel="stylesheet" th:href="@{/my/plugins/layui-v2.5.5/layui/css/layui.css}">
+        <link rel="stylesheet" th:href="@{/my/plugins/layuiadmin/style/admin.css}">
+        <script th:src="@{/my/plugins/layui-v2.5.5/layui/layui.js}"></script>
+        <script type="text/javascript"
+                src="http://api.map.baidu.com/api?v=2.0&ak=bYBuE9PQIvqTOtgdchD3Tr9FGH93o9hh"></script>
+        <style>
+            #div_map {
+                /*margin-top: -29px;
+                margin-left: -30px;
+                margin-right: -30px;*/
+                /*margin: -30px;*/
+            }
+
+            #map_canvas {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head>
+
+
+    <body class="app-content">
+        <div class="layui-fluid">
+            <div class="layui-row layui-col-space15">
+                <div class="layui-col-sm12">
+                    <div class="layui-card">
+                        <div class="layui-card-header">设备分布</div>
+                        <div class="layui-card-body">
+                            <div id="map_canvas" class="baidu-maps"></div>
+                            <!--<div class="layui-carousel layadmin-carousel layadmin-dataview" data-anim="fade" lay-filter="LAY-index-plat">-->
+                            <!--<div carousel-item id="LAY-index-plat">-->
+                            <!---->
+                            <!--<div><i class="layui-icon layui-icon-loading1 layadmin-loading"></i></div>-->
+                            <!--</div>-->
+                            <!--</div>-->
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            layui.config({
+                base: '/my/plugins/layui-2.5.5/' //静态资源所在路径
+            })
+            //     .extend({
+            //     index: 'lib/index' //主入口模块
+            // }).use(['index', 'senior']);
+
+            layui.use(['table', 'form'], function () {
+                var $ = layui.$ //重点处
+                // $('#LAY-index-plat').height($('#mainFrame', parent.document).height());
+                $('#map_canvas').height($('#mainFrame', parent.document).height() - 103);
+                var map = new BMap.Map("map_canvas");
+                map.enableScrollWheelZoom();
+                map.addControl(new BMap.NavigationControl());
+                map.addControl(new BMap.MapTypeControl());
+                var point = new BMap.Point(108.998207, 33.399868);
+                map.centerAndZoom(point, 5);
+
+                // 编写自定义函数,创建标注
+                function addMarker(point) {
+                    var marker = new BMap.Marker(point);
+                    map.addOverlay(marker);
+                }
+
+                // 随机向地图添加25个标注
+                var bounds = map.getBounds();
+                var sw = bounds.getSouthWest();
+                var ne = bounds.getNorthEast();
+                var points_1 = [];  // 添加海量点数据
+                var points_2 = [];  // 添加海量点数据
+
+                var options_1 = {
+                    size: BMAP_POINT_SIZE_BIG,
+                    // shape: BMAP_POINT_SHAPE_STAR,
+                    color: 'red'
+                }
+                var options_2 = {
+                    size: BMAP_POINT_SIZE_BIG,
+                    // shape: BMAP_POINT_SHAPE_STAR,
+                    color: 'green'
+                }
+                var myIcon_green = new BMap.Icon("/my/image/green_64.png", new BMap.Size(64, 64));
+                var myIcon_red = new BMap.Icon("/my/image/marker_green.png", new BMap.Size(39, 25));
+
+                var getAttr = function (e) {
+                    var id= e.target.customData.id;
+                    if (id === undefined || id === null || id === "") {
+                        return;
+                    } else {
+                        window.location.href = "/details/index?id=" + id;
+                    }
+                }
+
+                $.ajax({
+                    url: '/settings/station/getStation',
+                    type: 'POST',
+                    data: {},
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.result) {
+                            var data = response.data;
+                            for (var i = 0; i < data.length; i++) {
+                                var point = new BMap.Point(data[i].longitude, data[i].latitude);
+                                var marker;
+                                if (data[i].status !== 1) {
+                                    marker = new BMap.Marker(point, {icon: myIcon_red});
+                                } else {
+                                    marker = new BMap.Marker(point, {icon: myIcon_red});
+                                }
+                                var id = data[i].id.toString();
+
+                                map.addOverlay(marker);
+                                var label = new BMap.Label(data[i].name,{offset:new BMap.Size(20,-10)});
+                                marker.setLabel(label);
+                                marker.customData={id:id};
+                                marker.addEventListener("click", function (e) {
+                                    getAttr(e)
+                                });
+                                // if(data[i].status!==1){
+                                //     points_1.push(new BMap.Point(data[i].longitude,data[i].latitude));
+                                // }else{
+                                //     points_2.push(new BMap.Point(data[i].longitude,data[i].latitude));
+                                // }
+                            }
+                            // var pointCollection_1 = new BMap.PointCollection(points_1, options_1);  // 初始化PointCollection
+                            // var pointCollection_2 = new BMap.PointCollection(points_2, options_2);  // 初始化PointCollection
+                            // map.addOverlay(pointCollection_1);
+                            // map.addOverlay(pointCollection_2);
+                        }
+                    }
+                });
+
+            });
+
+
+        </script>
+    </body>
+</html>

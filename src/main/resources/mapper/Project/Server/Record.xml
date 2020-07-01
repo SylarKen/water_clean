@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sylar.water_clean.dao.Project.Server.RecordDao">
+    <insert id="Insert_VI" parameterType="map">
+        INSERT INTO `t_data_record_vi` (`station_id`,
+                                        `IMEI`,
+                                        `device_number`,
+                                        `current_a`,
+                                        `current_b`,
+                                        `current_c`,
+                                        `voltage_a`,
+                                        `voltage_b`,
+                                        `voltage_c`,
+                                        `alarm`,
+                                        `package`,
+                                        `time_client`,
+                                        `time_save`)
+        VALUES (#{station_id},
+                #{IMEI},
+                #{device_number},
+                #{current_a},
+                #{current_b},
+                #{current_c},
+                #{voltage_a},
+                #{voltage_b},
+                #{voltage_c},
+                #{alarm},
+                #{package},
+                #{time_client},
+                NOW());
+    </insert>
+    <insert id="Insert_IO" parameterType="map">
+        INSERT INTO `t_data_record_io` (`station_id`,
+                                        `IMEI`,
+                                        `device_number`,
+                                        `io`,
+                                        `package`,
+                                        `time_client`,
+                                        `time_save`)
+        VALUES (#{station_id}, #{IMEI}, #{device_number}, #{io}, #{package}, #{time_client}, NOW());
+    </insert>
+    <update id="Update_Realtime_VI" parameterType="map">
+        INSERT INTO `t_data_realtime` (`IMEI`,
+                                       `station_id`,
+                                       `device_number`,
+                                       `current_a`,
+                                       `current_b`,
+                                       `current_c`,
+                                       `voltage_a`,
+                                       `voltage_b`,
+                                       `voltage_c`,
+                                       `update_time_vi`)
+        VALUES (#{IMEI},
+                #{station_id},
+                #{device_number},
+                #{current_a},
+                #{current_b},
+                #{current_c},
+                #{voltage_a},
+                #{voltage_b},
+                #{voltage_c},
+                NOW())
+
+        ON DUPLICATE KEY UPDATE `current_a`      = #{current_a},
+                                `current_b`      = #{current_b},
+                                `current_c`      = #{current_c},
+                                `voltage_a`      = #{voltage_a},
+                                `voltage_b`      = #{voltage_b},
+                                `voltage_c`      = #{voltage_c},
+                                `update_time_vi` = NOW()
+    </update>
+    <!--<update id="Update_Realtime_VI1" parameterType="map">-->
+    <!--UPDATE `t_data_realtime`-->
+    <!--SET `current_a` = #{current_a},-->
+    <!--`current_b` = #{current_b},-->
+    <!--`current_c` = #{current_c},-->
+    <!--`voltage_a` = #{voltage_a},-->
+    <!--`voltage_b` = #{voltage_b},-->
+    <!--`voltage_c` = #{voltage_c}-->
+    <!--WHERE (`IMEI` = #{IMEI}-->
+    <!--AND `station_id` = #{station_id}-->
+    <!--AND `device_number` = #{device_number});-->
+    <!--</update>-->
+    <update id="Update_Realtime_IO" parameterType="map">
+        INSERT INTO `t_data_realtime` (`IMEI`,
+                                       `station_id`,
+                                       `device_number`,
+                                       `io1`,
+                                       `io2`,
+                                       `io3`,
+                                       `io4`,
+                                       `io5`,
+                                       `io6`,
+                                       `io7`,
+                                       `io8`,
+                                       `io9`,
+                                       `update_time_io`)
+        VALUES (#{IMEI},
+                #{station_id},
+                #{device_number},
+                #{io1},
+                #{io2},
+                #{io3},
+                #{io4},
+                #{io5},
+                #{io6},
+                #{io7},
+                #{io8},
+                #{io9},
+                NOW())
+        ON DUPLICATE KEY UPDATE `io1`            = #{io1},
+                                `io2`            = #{io2},
+                                `io3`            = #{io3},
+                                `io4`            = #{io4},
+                                `io5`            = #{io5},
+                                `io6`            = #{io6},
+                                `io7`            = #{io7},
+                                `io8`            = #{io8},
+                                `io9`            = #{io9},
+                                `update_time_io` = NOW()
+    </update>
+    <!--<update id="Update_Realtime_IO1" parameterType="map">-->
+    <!--UPDATE `t_data_realtime`-->
+    <!--SET `io1` = #{io1},-->
+    <!--`io2` = #{io2},-->
+    <!--`io3` = #{io3},-->
+    <!--`io4` = #{io4},-->
+    <!--`io5` = #{io5},-->
+    <!--`io6` = #{io6},-->
+    <!--`io7` = #{io7},-->
+    <!--`io8` = #{io8},-->
+    <!--`io9` = #{io9}-->
+    <!--WHERE (`IMEI` = #{IMEI}-->
+    <!--AND `station_id` = #{station_id}-->
+    <!--AND `device_number` = #{device_number});-->
+    <!--</update>-->
+
+    <select id="CheckBind" resultType="map" parameterType="map">
+        SELECT *
+        FROM t_cattle_info
+        WHERE locationId = #{locationId}
+          AND delete_flag = 0
+    </select>
+</mapper>

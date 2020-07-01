@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sylar.water_clean.dao.System.MenuDao">
+    <select id="Get" resultType="map">
+        SELECT *
+        FROM t_sys_menu
+    </select>
+
+    <select id="GetMenuByRole" resultType="map" parameterType="int">
+        SELECT a.*
+        FROM t_sys_menu a
+                 LEFT JOIN t_sys_rights b on a.id = b.menuId
+        WHERE 1 = 1
+          AND b.role_code = #{role_code}
+    </select>
+
+
+    <select id="GetEquipments" resultType="map">
+        SELECT e.id,
+               e.equipment_code,
+               e.name,
+               et.code        AS type_code,
+               e.gateway_code AS gateway_code,
+               et.name        AS type_name,
+               et.url         AS url
+        FROM `t_equipment` e
+                 LEFT JOIN t_equipment_type et ON et.id = e.type
+        WHERE e.`enable` = 1
+    </select>
+
+    <select id="getAllActions" resultType="String">
+        SELECT a.url
+        FROM t_sys_menu a
+        WHERE a.url is NOT NULL
+          AND a.url != ''
+    </select>
+</mapper>

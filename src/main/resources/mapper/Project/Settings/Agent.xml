@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sylar.water_clean.dao.Project.Settings.AgentDao">
+    <select id="GetAgents" parameterType="map" resultType="map">
+        SELECT *
+        FROM t_sys_agent
+        WHERE 1 = 1
+          AND `available` = 1
+    </select>
+
+    <select id="GetStations" parameterType="map" resultType="map">
+        SELECT `id`, `name`, (CASE agent_id WHEN 1 THEN TRUE ELSE FALSE END) AS `check`
+        FROM t_station
+        WHERE 1 = 1
+          AND `available` = 1
+    </select>
+
+    <update id="UpdateStations_Reset" parameterType="map">
+        UPDATE t_station
+        SET agent_id = NULL
+        WHERE agent_id = #{agent_id};
+    </update>
+    <update id="UpdateStations_Set" parameterType="map">
+        UPDATE t_station
+        SET agent_id = #{agent_id}
+        WHERE FIND_IN_SET(id, #{stations})
+    </update>
+    <select id="Check_Code" parameterType="map" resultType="int">
+        SELECT COUNT(1) FROM t_sys_agent
+        WHERE 1 = 1
+          AND `code` = #{code}
+    </select>
+
+    <select id="Check_Name" parameterType="map" resultType="int">
+        SELECT COUNT(1) FROM t_sys_agent
+        WHERE 1 = 1
+          AND `name` = #{name}
+    </select>
+    <insert id="SaveAgents" parameterType="map">
+        INSERT INTO `t_sys_agent` (
+            `code`,
+            `name`,
+            `stations`,
+            `time_create`,
+            `creator`,
+            `available`
+        )
+        VALUES
+        (
+            #{code},
+            #{name},
+            NULL,
+            NOW(),
+            NULL,
+            '1'
+        );
+    </insert>
+</mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sylar.water_clean.dao.Project.Device.DeviceDao">
+    <select id="GetDevices_ByID" parameterType="int" resultType="map">
+        SELECT *, IFNULL(TIMESTAMPDIFF(MINUTE, update_time_io, NOW()), 10000) AS io_offtime,
+                  IFNULL(TIMESTAMPDIFF(MINUTE, update_time_vi, NOW()), 10000) AS vi_offtime
+        FROM `t_data_realtime`
+        WHERE `station_id` = #{id}
+        ORDER BY `device_number` ASC
+    </select>
+    <!--<select id="GetDevices_ByID" parameterType="int" resultType="map">-->
+    <!--SELECT *-->
+    <!--FROM `t_data_realtime`-->
+    <!--WHERE `station_id` = #{id}-->
+    <!--AND (TIMESTAMPDIFF(SECOND, update_time_io, NOW()) &lt; 60 OR-->
+    <!--TIMESTAMPDIFF(SECOND, update_time_vi, NOW()) &lt; 60)-->
+    <!--</select>-->
+
+</mapper>

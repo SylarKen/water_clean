@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sylar.water_clean.dao.Project.Settings.StationDao">
+    <select id="GetStation" parameterType="map" resultType="map">
+        SELECT *, CONCAT(latitude, ',', longitude)                                        AS coordinate,
+                  CONCAT((SELECT `Name` FROM t_areas WHERE `Code` = `province_code` LIMIT 1), ' - ',
+                         (SELECT `Name` FROM t_areas WHERE `Code` = `city_code` LIMIT 1)) AS location
+        FROM t_station
+        WHERE 1 = 1
+          AND IMEI IS NOT NULL
+          AND IMEI != ''
+          AND available = 1
+        <if test="role_code == 'stationmaster'">
+            AND id in (SELECT id FROM t_sys_user_station WHERE user_id = #{user_id})
+        </if>
+        <if test="role_code == 'agent'">
+            AND agent_id = (SELECT agent_id FROM t_sys_user_agent WHERE user_id = #{user_id})
+        </if>
+    </select>
+
+    <select id="Check_CODE" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM t_station
+        WHERE 1 = 1
+          AND `code` = #{code}
+    </select>
+
+    <select id="Check_IMEI" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM t_station
+        WHERE 1 = 1
+          AND `IMEI` = #{IMEI}
+    </select>
+
+    <select id="Check_ByID" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM t_station
+        WHERE 1 = 1
+          AND `id` = #{id}
+          AND `IMEI` != #{IMEI}
+    </select>
+
+    <insert id="Insert" parameterType="map">
+        INSERT INTO `t_station`
+        SET
+        <if test="params.agent_id != null">
+            `agent_id` = #{params.agent_id},
+        </if>
+        <if test="params.name != null">
+            `name` = #{params.name},
+        </if>
+        <if test="params.code != null">
+            `code` = #{params.code},
+        </if>
+        <if test="params.IMEI != null">
+            `IMEI` = #{params.IMEI},
+        </if>
+        <if test="params.quantity != null">
+            `quantity` = #{params.quantity},
+        </if>
+        <if test="params.province_code != null">
+            `province_code` = #{params.province_code},
+        </if>
+        <if test="params.city_code != null">
+            `city_code` = #{params.city_code},
+        </if>
+        <if test="params.latitude != null">
+            `latitude` = #{params.latitude},
+        </if>
+        <if test="params.longitude != null">
+            `longitude` = #{params.longitude},
+        </if>
+        `available` = 1
+    </insert>
+
+    <update id="Update" parameterType="map">
+        UPDATE `t_station`
+        SET `agent_id`      = #{params.agent_id},
+            `name`          = #{params.name},
+            `code`          = #{params.code},
+            `IMEI`          = #{params.IMEI},
+            `quantity`      = #{params.quantity},
+            `province_code` = #{params.province_code},
+            `city_code`     = #{params.city_code},
+            `latitude`      = #{params.latitude},
+            `longitude`     = #{params.longitude},
+            `available`     = 1
+        WHERE (`id` = #{params.id});
+    </update>
+
+    <update id="Unbind" parameterType="map">
+        UPDATE t_station
+        SET `IMEI` = '',
+            `available`    = 0
+        WHERE `IMEI` = #{IMEI}
+    </update>
+
+    <select id="GetStation_ByIMEI" parameterType="string" resultType="map">
+        SELECT *
+        FROM `t_station`
+        WHERE `IMEI` = #{IMEI}
+          AND `available` = 1
+
+    </select>
+
+    <update id="Delete">
+        UPDATE `t_station`
+        SET `available` = 0
+        WHERE id = #{id}
+    </update>
+</mapper>

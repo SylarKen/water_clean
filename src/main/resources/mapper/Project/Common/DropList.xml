@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sylar.water_clean.dao.Project.Common.DropListDao">
+    <select id="GetProvinces" resultType="map" parameterType="map">
+        SELECT `Code` AS id, `Name` AS text, `ParentCode` AS pcode
+        FROM t_areas
+        WHERE `Level` = 1
+        ORDER BY `Code`
+    </select>
+
+    <select id="GetCities" resultType="map" parameterType="map">
+        SELECT `Code` AS id, `Name` AS text, `ParentCode` AS pcode  FROM t_areas
+        WHERE `Level` = 2
+        ORDER BY `Code`
+    </select>
+
+    <select id="GetAgents" resultType="map" parameterType="map">
+        SELECT `id` AS id, `name` as text FROM t_sys_agent
+        WHERE 1 = 1
+          AND `available` = 1
+        ORDER BY `name`
+    </select>
+    <select id="GetRoles" resultType="map" parameterType="map">
+        SELECT `code` AS id, `name` as text FROM t_sys_role
+        WHERE 1 = 1
+          AND `available` = 1
+        ORDER BY `name`
+    </select>
+
+    <select id="GetStations" parameterType="map" resultType="map">
+        SELECT  `id` AS id, `name` as text
+        FROM t_station
+        WHERE 1 = 1
+        AND IMEI IS NOT NULL
+        AND IMEI != ''
+        AND available = 1
+    </select>
+</mapper>

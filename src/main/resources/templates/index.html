@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:v-for="http://www.w3.org/1999/xhtml"
+      xmlns:v-on="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <title>恒威水工</title>
+        <base th:href="${#request.getContextPath()}+'/'">
+        <!--<script th:src="@{/my/plugins/jquery/dist/jquery.js}"></script>-->
+        <!--<link rel="stylesheet" th:href="@{/my/plugins/layui-v2.5.4/css/layui.css}">-->
+        <link rel="stylesheet" th:href="@{/my/plugins/layuiadmin/layui/css/layui.css}">
+        <link rel="stylesheet" th:href="@{/my/plugins/layuiadmin/style/admin.css}">
+        <!--<script th:src="@{/my/plugins/layui-v2.5.4/layui.js}"></script>-->
+        <script th:src="@{/my/plugins/layuiadmin/layui/layui.js}"></script>
+        <script th:src="@{/my/plugins/vue/dist/vue.js}"></script>
+        <script th:src="@{/my/plugins/node_modules/axios/dist/axios.js}"></script>
+        <style>
+            .layui-layout-admin .layui-body {
+                bottom: 64px;
+            }
+
+            [v-cloak] {
+                display: none;
+            }
+        </style>
+
+    </head>
+    <body class="layui-layout-body">
+        <div id="LAY_app">
+            <div class="layui-layout layui-layout-admin">
+                <div class="layui-header">
+                    <!-- 头部区域 -->
+                    <ul class="layui-nav layui-layout-left">
+                        <li class="layui-nav-item layadmin-flexible" lay-unselect>
+                            <a href="javascript:;" layadmin-event="flexible" title="侧边伸缩">
+                                <i class="layui-icon layui-icon-shrink-right" id="LAY_app_flexible"></i>
+                            </a>
+                        </li>
+                        <li class="layui-nav-item layui-hide-xs" lay-unselect>
+                            <a href="http://www.baidu.com/" target="_blank" title="前台">
+                                <i class="layui-icon layui-icon-website"></i>
+                            </a>
+                        </li>
+                        <li class="layui-nav-item" lay-unselect>
+                            <a href="javascript:;" layadmin-event="refresh" title="刷新">
+                                <i class="layui-icon layui-icon-refresh-3"></i>
+                            </a>
+                        </li>
+<!--                        <li class="layui-nav-item layui-hide-xs" lay-unselect>-->
+<!--                            <input type="text" placeholder="搜索..." autocomplete="off"-->
+<!--                                   class="layui-input layui-input-search" layadmin-event="serach"-->
+<!--                                   lay-action="template/search.html?keywords=">-->
+<!--                        </li>-->
+                    </ul>
+                    <ul class="layui-nav layui-layout-right" lay-filter="layadmin-layout-right">
+
+<!--                        <li class="layui-nav-item" lay-unselect>-->
+<!--                            <a lay-href="app/message/index.html" layadmin-event="message" lay-text="消息中心">-->
+<!--                                <i class="layui-icon layui-icon-notice"></i>-->
+
+<!--                                &lt;!&ndash; 如果有新消息，则显示小圆点 &ndash;&gt;-->
+<!--                                <span class="layui-badge-dot"></span>-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li class="layui-nav-item layui-hide-xs" lay-unselect>-->
+<!--                            <a href="javascript:;" layadmin-event="theme">-->
+<!--                                <i class="layui-icon layui-icon-theme"></i>-->
+<!--                            </a>-->
+<!--                        </li>-->
+<!--                        <li class="layui-nav-item layui-hide-xs" lay-unselect>-->
+<!--                            <a href="javascript:;" layadmin-event="note">-->
+<!--                                <i class="layui-icon layui-icon-note"></i>-->
+<!--                            </a>-->
+<!--                        </li>-->
+                        <li class="layui-nav-item layui-hide-xs" lay-unselect>
+                            <a href="javascript:;" layadmin-event="fullscreen">
+                                <i class="layui-icon layui-icon-screen-full"></i>
+                            </a>
+                        </li>
+                        <li class="layui-nav-item" lay-unselect>
+                            <a href="javascript:;">
+                                <cite th:text="${realname}"></cite>
+                            </a>
+                            <dl class="layui-nav-child">
+                                <!--                                <dd><a lay-href="set/user/info.html">基本资料</a></dd>-->
+                                <dd><a onclick="openForm_changePsw()">修改密码</a></dd>
+                                <hr>
+                                <dd style="text-align: center;" onclick="logout()"><a>退出</a></dd>
+                            </dl>
+                        </li>
+
+                        <li class="layui-nav-item layui-hide-xs" lay-unselect>
+                            <a href="javascript:;"><i
+                                    class="layui-icon layui-icon-more-vertical"></i></a>
+                        </li>
+                        <li class="layui-nav-item layui-show-xs-inline-block layui-hide-sm" lay-unselect>
+                            <a href="javascript:;" layadmin-event="more"><i
+                                    class="layui-icon layui-icon-more-vertical"></i></a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- 侧边菜单 -->
+                <div class="layui-side layui-side-menu">
+                    <div class="layui-side-scroll">
+                        <div class="layui-logo" lay-href="home/console.html">
+                            <span>曲阜恒威水工</span>
+                        </div>
+
+
+                        <ul class="layui-nav layui-nav-tree" lay-shrink="all" id="LAY-system-side-menu"
+                            lay-filter="layadmin-system-side-menu" v-cloak>
+                            <li v-for="(m,index) in menu.nodes" :data-name="m.nodeCode"
+                                class="layui-nav-item">
+                                <a href="javascript:;" :lay-tips="m.nodeName" lay-direction="2">
+                                    <i class="layui-icon" v-bind:class="m.icon"></i>
+                                    <cite>{{m.nodeName}}</cite>
+                                </a>
+                                <dl v-if="m.children.length > 0" class="layui-nav-child">
+                                    <dd v-for="(sm,index) in m.children" data-name="console">
+                                        <a :lay-href="sm.url">{{sm.nodeName}}</a>
+                                        <!--<dl v-for="(ssm,index) in sm.children" v-if="ssm.children.length > 0" class="layui-nav-child">-->
+                                        <!--<dd data-name="list">-->
+                                        <!--<a lay-href="ssm.url">{{ssm.nodeName}}</a>-->
+                                        <!--</dd>-->
+
+                                        <!--</dl>-->
+                                    </dd>
+                                </dl>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 主体内容 -->
+                <div class="layui-body" id="LAY_app_body">
+                    <div class="layadmin-tabsbody-item layui-show">
+                        <iframe src="home/index" frameborder="0" class="layadmin-iframe" id="mainFrame"></iframe>
+                    </div>
+                </div>
+                <!-- 页面标签 -->
+                <div class="layadmin-pagetabs" id="LAY_app_tabs">
+                    <div class="layui-icon layadmin-tabs-control layui-icon-prev" layadmin-event="leftPage"></div>
+                    <div class="layui-icon layadmin-tabs-control layui-icon-next" layadmin-event="rightPage"></div>
+                    <div class="layui-icon layadmin-tabs-control layui-icon-down">
+                        <ul class="layui-nav layadmin-tabs-select" lay-filter="layadmin-pagetabs-nav">
+                            <li class="layui-nav-item" lay-unselect>
+                                <a href="javascript:;"></a>
+                                <dl class="layui-nav-child layui-anim-fadein">
+                                    <dd layadmin-event="closeThisTabs"><a href="javascript:;">关闭当前标签页</a></dd>
+                                    <dd layadmin-event="closeOtherTabs"><a href="javascript:;">关闭其它标签页</a></dd>
+                                    <dd layadmin-event="closeAllTabs"><a href="javascript:;">关闭全部标签页</a></dd>
+                                </dl>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="layui-tab" lay-unauto lay-allowClose="true" lay-filter="layadmin-layout-tabs"
+                         id="frame_tabs1">
+                        <ul class="layui-tab-title" id="LAY_app_tabsheader">
+                            <li lay-id="home/console.html" lay-attr="home/console.html" class="layui-this"><i
+                                    class="layui-icon layui-icon-home"></i></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="layui-footer footer footer-demo">
+                    <div class="layui-main">
+                        <p>© http://www.domor.net - 山东一脉物联网科技有限公司</p>
+
+                    </div>
+                </div>
+                <!--<div class="layui-footer">-->
+                <!--&lt;!&ndash; 底部固定区域 &ndash;&gt;-->
+                <!--© http://www.domor.net - 山东一脉物联网科技有限公司-->
+                <!--&lt;!&ndash;&nbsp;&ndash;&gt;-->
+                <!--</div>-->
+            </div>
+            <div class="layui-fluid" id="form_changePwd" hidden="hidden">
+                <form class="layui-form" lay-filter="form_changePwd">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">原密码</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="pwd_old" placeholder="原密码"
+                                       autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">新密码</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="pwd_new"
+                                       placeholder="新密码" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">重复新密码</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="pwd_new_re"
+                                       placeholder="重复新密码" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-input-block">
+                            <button type="button" class="layui-btn" id="btn_change_sub" lay-submit=""
+                                    lay-filter="save_pwd">保存
+                            </button>
+                            <button type="reset" class="layui-btn layui-btn-primary" id="btn_add_reload"
+                                    name="btn_reload">重置
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script>
+            var vue = new Vue({
+                el: '#LAY-system-side-menu',
+                data: {
+
+                    menu: [{
+                        name: "test",
+                        child: [{
+                            name: "child1",
+                            children: {}
+                        }, {
+                            name: "child2",
+                            children: {}
+                        }]
+                    }]
+
+                },
+                mounted: function () {
+                    var _this = this;
+                    axios.get('/Menus/get?id=')
+                        .then(function (response) {
+                            if (response.status === 200) {
+                                _this.menu = response.data;
+                                // layui.config({
+                                //     base: 'my/plugins/layuiadmin/' //静态资源所在路径
+                                // }).extend({
+                                //     index: 'lib/index' //主入口模块
+                                // }).use('index');
+
+                            }
+                            console.log(response);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                    // layui.use('element', function () {
+                    //     var element = layui.element;
+                    //
+                    // });
+                },
+                methods: {
+                    setClass_by_index: function (index) {
+                        if (index === 0) {
+                            return "layui-nav-item layui-nav-itemed"
+                        } else {
+                            return "layui-nav-item"
+                        }
+                    },
+                    change_iframe_src: function (url) {
+                        $('#main_iframe').attr('src', url)
+                    },
+                    get_allurls: function () {
+                        var _this = this;
+                        var menu = _this.menu;
+                        var allurls = [];
+                        _this.iterator_menu(allurls, _this.menu.nodes);
+                        return allurls;
+                    },
+                    iterator_menu: function (allurls, nodes) {
+                        var _this = this;
+                        for (var i = 0; i < nodes.length; i++) {
+                            if (nodes[i].url !== "") {
+                                allurls.push(nodes[i].url);
+                            }
+                            if (nodes[i].children !== null && nodes[i].children.length > 0) {
+                                _this.iterator_menu(allurls, nodes[i].children);
+                            }
+                        }
+                    }
+                }
+            });
+            layui.config({
+                base: 'my/plugins/layuiadmin/' //静态资源所在路径
+            }).extend({
+                index: 'lib/index' //主入口模块
+            }).use(['index', 'form', 'element'], function () {
+                var $ = layui.$;
+                var element = layui.element;
+                var form = layui.form;
+                var layer = layui.layer;
+                var layer_form_index;
+                window.element = element;
+                // element.tabAdd('layadmin-layout-tabs', {
+                //     title: '选项卡的标题'
+                //     ,content: '<div>adfasdf</div>' //支持传入html
+                //     ,id: '选项卡标题的lay-id属性值'
+                // });
+                window.logout = function () {
+                    window.location.href = "/exit";
+                };
+
+                window.openForm_changePsw = function (data) {
+                    layer_form_index = layer.open({
+                        title: '页面层'
+                        , type: 1
+                        , shadeClose: true
+                        , area: ['400', '300']
+                        , content: $('#form_changePwd')
+                        , success: function (layero, index) {
+                            if (data) {
+
+                            }
+                        }
+                        , end: function () {
+                            $('#btn_reset').click();
+                            form.render();
+                            layer.close(layer_form_index);
+                        }
+                    });
+
+                };
+
+                form.on('submit(save_pwd)', function (data) {
+                    var pwd_old = data.field.pwd_old
+                        , pwd_new = data.field.pwd_new
+                        , pwd_new_re = data.field.pwd_new_re;
+                    if (pwd_new === "") {
+                        layer.alert("请输入新密码", {
+                            icon: 1,
+                            shadeClose: true,
+                            title: "提示"
+                        });
+                    }
+                    if (pwd_new !== pwd_new_re) {
+                        layer.alert("两次输入的密码不一致，请重新输入", {
+                            icon: 1,
+                            shadeClose: true,
+                            title: "提示"
+                        });
+                        return;
+                    }
+                    $.ajax({
+                        url: 'system/changePwd',
+                        type: 'POST',
+                        data: {
+                            pwd_old: pwd_old,
+                            pwd_new: pwd_new,
+                            pwd_new_re: pwd_new_re
+                        },
+                        dataType: "json",
+                        beforeSend: function () {
+                            $('#btn_change_sub').addClass("layui-btn-disabled");
+                        },
+                        success:
+                            function (response) {
+                                if (response) {
+                                    layer.alert(response.message, {
+                                        icon: 1,
+                                        shadeClose: true,
+                                        title: "提示"
+                                    }, function (index) {
+                                        layer.close(index);
+                                        if (response.result) {
+                                            form.val('form_changePwd', {
+                                                pwd_old: "",
+                                                pwd_new: "",
+                                                pwd_new_re: ""
+                                            });
+                                            layui.form.render();
+                                            layer.close(layer_form_index);
+                                            window.location.href = "/exit";
+                                        }
+
+                                    });
+                                }
+                            },
+                        complete: function () {
+                            $('#btn_change_sub').removeClass("layui-btn-disabled");
+
+                        }
+                    })
+                });
+            });
+        </script>
+    </body>
+</html>

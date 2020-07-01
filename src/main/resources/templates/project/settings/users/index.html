@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>用户管理</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <base th:href="${#request.getContextPath()}+'/'">
+
+        <script th:src="@{/my/plugins/jquery/dist/jquery.js}"></script>
+        <script th:src="@{/my/plugins/vue/dist/vue.js}"></script>
+        <link rel="stylesheet" th:href="@{/my/plugins/layui-v2.5.5/layui/css/layui.css}">
+        <link rel="stylesheet" th:href="@{/my/plugins/layuiadmin/style/admin.css}">
+        <script th:src="@{/my/plugins/layui-v2.5.5/layui/layui.js}"></script>
+    </head>
+    <body class="layui-layout-body">
+        <div class="layui-fluid">
+            <div class="layui-row layui-col-space15">
+                <div class="layui-col-md12">
+                    <div class="layui-card-header">当前数据</div>
+                    <div class="layui-card-body">
+                        <div class="layui-carousel layadmin-carousel layadmin-dataview" data-anim="fade"
+                             lay-filter="LAY-index-normline">
+                            <table class="layui-hide" id="table" lay-filter="table"></table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <script type="text/html" id="toolbar">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+                <button class="layui-btn layui-btn-danger layui-btn-sm" lay-event="delete">删除</button>
+            </div>
+        </script>
+        <script type="text/html" id="barButton">
+            <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-xs" lay-event="reset">重置密码</a>
+            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+        </script>
+
+        <script type="text/html" id="barFenpei">
+            {{#  if(d.role_code == 'stationmaster'){ }}
+            <a class="layui-btn layui-btn-xs" lay-event="assign">分配站点</a>
+            {{#  } }}
+        </script>
+
+        <div id="app">
+            <div class="layui-fluid" id="form_add" hidden="hidden">
+                <div class="layui-row layui-col-space15">
+                    <div class="layui-col-sm6">
+                        <div class="layui-card">
+                            <div class="layui-card-header">用户信息</div>
+                            <div class="layui-card-body">
+                                <form class="layui-form" lay-filter="form_add">
+                                    <div class="layui-form-item">
+                                        <input type="text" name="id" id="id" hidden="hidden"
+                                               placeholder="ID" autocomplete="off" class="">
+                                        <div class="layui-inline">
+                                            <label class="layui-form-label">角色</label>
+                                            <div class="layui-input-inline">
+                                                <select name="role" lay-search="" lay-filter="role">
+                                                    <option value="">直接选择或搜索选择</option>
+                                                    <option v-for="r in roles" :value="r.id">{{r.text}}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="layui-inline" v-if="role == 'agent'">
+                                            <label class="layui-form-label">代理商</label>
+                                            <div class="layui-input-inline">
+                                                <select name="agent" lay-filter="agent">
+                                                    <option value="">直接选择或搜索选择</option>
+                                                    <option v-for="a in agents"
+                                                            :value="a.id">{{a.text}}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="layui-inline" v-if="role == 'stationmaster'">
+                                            <label class="layui-form-label">站点</label>
+                                            <div class="layui-input-inline">
+                                                <select name="station" lay-filter="station">
+                                                    <option value="">直接选择或搜索选择</option>
+                                                    <option v-for="s in stations"
+                                                            :value="s.id">{{s.text}}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="layui-inline">
+                                            <label class="layui-form-label">登录名</label>
+                                            <div class="layui-input-inline">
+                                                <input type="text" name="username" id="username"
+                                                       placeholder="登录名" autocomplete="off" class="layui-input">
+                                            </div>
+                                        </div>
+                                        <div class="layui-inline">
+                                            <label class="layui-form-label">用户名称</label>
+                                            <div class="layui-input-inline">
+                                                <input type="text" name="realname" id="realname"
+                                                       placeholder="用户名称" autocomplete="off" class="layui-input">
+                                            </div>
+                                        </div>
+                                        <div class="layui-inline">
+                                            <label class="layui-form-label">初始密码</label>
+                                            <div class="layui-input-inline">
+                                                <input type="text" name="password" id="password" value="123456"
+                                                       readonly="readonly"
+                                                       placeholder="密码" autocomplete="off" class="layui-input">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="layui-form-item">
+                                        <div class="layui-input-block">
+                                            <button type="button" class="layui-btn" id="btn_sub" lay-submit=""
+                                                    lay-filter="save">保存
+                                            </button>
+                                            <button type="reset" class="layui-btn layui-btn-primary" id="btn_reset"
+                                                    name="btn_reset">重置
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--<div class="layui-fluid" id="form_assign" hidden="hidden">-->
+            <!--<div class="layui-row layui-col-space15">-->
+            <!--<div class="layui-col-sm6">-->
+            <!--<div class="layui-card">-->
+            <!--<div class="layui-card-header">站点分配</div>-->
+            <!--<div class="layui-card-body">-->
+            <!--<form class="layui-form" lay-filter="form_add">-->
+            <!--<div class="layui-form-item">-->
+            <!--<input type="text" name="user_id" id="user_id" hidden="hidden"-->
+            <!--placeholder="ID" autocomplete="off" class="">-->
+
+            <!--<div class="layui-inline" v-if="role == 'agent'">-->
+            <!--<label class="layui-form-label">站点</label>-->
+            <!--<div class="layui-input-inline">-->
+            <!--<select name="agent" lay-filter="agent">-->
+            <!--<option value="">直接选择或搜索选择</option>-->
+            <!--<option v-for="a in agents"-->
+            <!--:value="a.id">{{a.text}}-->
+            <!--</option>-->
+            <!--</select>-->
+            <!--</div>-->
+            <!--</div>-->
+            <!--</div>-->
+            <!--<div class="layui-form-item">-->
+            <!--<div class="layui-input-block">-->
+            <!--<button type="button" class="layui-btn" id="btn_sub_assign" lay-submit=""-->
+            <!--lay-filter="save">保存-->
+            <!--</button>-->
+            <!--<button type="reset" class="layui-btn layui-btn-primary" id="btn_reset_assign"-->
+            <!--name="btn_reset">重置-->
+            <!--</button>-->
+            <!--</div>-->
+            <!--</div>-->
+            <!--</form>-->
+            <!--</div>-->
+            <!--</div>-->
+            <!--</div>-->
+            <!--</div>-->
+            <!--</div>-->
+        </div>
+        <script>
+
+            var vue = new Vue({
+                el: '#app',
+                data: {
+                    role: '',
+                    station: '',
+                    roles: [],
+                    agents: []
+                },
+                mounted: function () {
+
+                },
+                methods: {
+                    get_droplist: function (id) {
+                        var _this = this;
+                        $.ajax({
+                            url: 'common/droplist/getuserform',
+                            type: 'POST',
+                            data: {},
+                            dataType: "json",
+                            success: function (response) {
+                                if (response.result) {
+                                    _this.agents = response.data.agents;
+                                    _this.roles = response.data.roles;
+                                    _this.stations = response.data.stations;
+                                    _this.$nextTick(function () {
+                                        form.render();
+                                    })
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+
+            layui.config({
+                base: '/my/plugins/layui-2.5.5/' //静态资源所在路径
+            })
+            layui.use(['table', 'form'], function () {
+                var $ = layui.$; //重点处
+                var table = layui.table;
+                var form = layui.form;
+                var layer = layui.layer;
+                var layer_form_index;
+                window.form = form;
+                vue.get_droplist();
+                var openForm = function (data) {
+                    layer_form_index = layer.open({
+                        title: '页面层'
+                        , type: 1
+                        //,skin: 'layui-layer-rim'
+                        , shadeClose: true
+                        , area: ['100%', '100%']
+                        // , content: $('#form_add_html')[0].innerHTML
+                        , content: $('#form_add')
+                        , success: function (layero, index) {
+                            if (data) {
+
+                                vue.role = data.role_code;
+                                vue.$nextTick(function () {
+                                    form.render();
+                                    form.val('form_add', {
+                                        id: data.id
+                                        , role: data.role_code
+                                        , agent: data.agent
+                                        , station: data.station_id
+                                        , username: data.username
+                                        , realname: data.realname
+                                    });
+                                });
+
+                                $('#username').attr("readonly", "readonly");
+                                $('#realname').attr("readonly", "readonly");
+                                $('#btn_reset').hide();
+                            }
+                        }
+                        , end: function () {
+                            $('#btn_reset').click();
+                            vue.cities_list = [];
+                            $('#username').removeAttr("readonly");
+                            $('#realname').removeAttr("readonly");
+                            $('#btn_reset').show();
+                            form.render();
+                            layer.close(layer_form_index);
+                        }
+                    });
+
+                };
+                //
+                // var openForm_assign = function (data) {
+                //     layer_form_index = layer.open({
+                //         title: '页面层'
+                //         , type: 1
+                //         , shadeClose: true
+                //         , area: ['100%', '100%']
+                //         , content: $('#form_assign')
+                //         , success: function (layero, index) {
+                //
+                //         }
+                //         , end: function () {
+                //             $('#btn_reset_assign').click();
+                //             vue.cities_list = [];
+                //             form.render();
+                //             layer.close(layer_form_index);
+                //         }
+                //     });
+                //
+                // };
+                form.render('select');
+
+                table.render({
+                    elem: '#table',
+                    url: '/settings/users/getUsers',
+                    where: {date: new Date()},
+                    toolbar: '#toolbar',//开启头部工具栏，并为其绑定左侧模板
+                    defaultToolbar: ['filter', 'exports', 'print', {
+                        title: '刷新' //标题
+                        , layEvent: 'LAYTABLE_UPDATE' //事件名，用于 toolbar 事件中使用
+                        , icon: 'layui-icon-refresh-3' //图标类名
+                    }
+                    ],
+                    title: '用户管理',
+                    cols: [
+                        [
+                            {type: 'checkbox', fixed: 'left'},
+                            // {field: 'id', title: 'ID', width: 80, fixed: 'left', unresize: true, sort: true},
+                            {field: 'username', title: '登录名', sort: false},
+                            {field: 'realname', title: '用户名称', sort: false},
+                            {field: 'role_name', title: '角色', sort: false},
+                            // {
+                            //     field: 'role_code',
+                            //     fixed: 'right', title: '分配', width: 150,
+                            //     templet: '#barFenpei'
+                            // },
+                            {fixed: 'right', title: '操作', toolbar: '#barButton', width: 350},
+                        ]
+                    ],
+                    page: true
+                });
+                //头工具栏事件
+                table.on('toolbar(table)', function (obj) {
+                    var checkStatus = table.checkStatus(obj.config.id);
+                    switch (obj.event) {
+                        case 'add':
+                            openForm();
+                            break;
+                        case 'getCheckLength':
+                            var data = checkStatus.data;
+                            layer.msg('选中了：' + data.length + ' 个');
+                            break;
+                        case 'isAll':
+                            layer.msg(checkStatus.isAll ? '全选' : '未全选');
+                            break;
+
+                        //自定义头工具栏右侧图标 - 提示
+                        case 'LAYTABLE_UPDATE':
+                            // layer.alert('这是工具栏右侧自定义的一个图标按钮');
+                            // $(".layui-laypage-btn").click();
+                            // break;
+                            table.reload('table', {
+                                where: {date: new Date()} //设定异步数据接口的额外参数
+                                //,height: 300
+                            });
+                            break;
+                    }
+                });
+
+                //监听行工具事件
+                table.on('tool(table)', function (obj) {
+                    var data = obj.data;
+                    //console.log(obj)
+                    if (obj.event === 'del') {
+                        layer.confirm('真的删除行么', function (index) {
+                            $.post({
+                                url: 'settings/users/delete',
+                                data: {id: data.id},
+                                success: function (response) {
+                                    if (response.result) {
+                                        layer.alert(response.message, {
+                                            icon: 1,
+                                            shadeClose: true,
+                                            title: "提示"
+                                        }, function (index) {
+                                            layer.close(index);
+                                            table.reload('table', {
+                                                where: {date: new Date()} //设定异步数据接口的额外参数
+                                            });
+                                        });
+                                    } else {
+                                    }
+                                },
+                                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                    layer.alert('请求失败', {
+                                        icon: 2,
+                                        shadeClose: true,
+                                        title: "提示"
+                                    });
+                                },
+                                complete: function () {
+                                    layer.close(index);
+                                }
+                            });
+                            // obj.del();
+                            // layer.close(index);
+                        });
+                    } else if (obj.event === 'edit') {
+                        openForm(data);
+                    } else if (obj.event === 'reset') {
+                        layer.confirm('确定要将该账户的密码重置为“123456”吗？', function (index) {
+                            $.post({
+                                url: 'settings/users/reset',
+                                data: {id: data.id},
+                                success: function (response) {
+                                    if (response.result) {
+                                        layer.alert(response.message, {
+                                            icon: 1,
+                                            shadeClose: true,
+                                            title: "提示"
+                                        }, function (index) {
+                                            layer.close(index);
+                                            table.reload('table', {
+                                                where: {date: new Date()} //设定异步数据接口的额外参数
+                                            });
+                                        });
+                                    } else {
+                                    }
+                                },
+                                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                    layer.alert('请求失败', {
+                                        icon: 2,
+                                        shadeClose: true,
+                                        title: "提示"
+                                    });
+                                },
+                                complete: function () {
+                                    layer.close(index);
+                                }
+                            });
+                            // obj.del();
+                            // layer.close(index);
+                        });
+                    } else if (obj.event === 'assign') {
+                        openForm_assign();
+                    }
+                });
+
+                // table.on('row(table)', function (obj) {
+                //     layer.msg('选中了：' + obj.data.ICCID + '');
+                //     var data = form.val('form_search', {
+                //         "tx_iccid": obj.data.ICCID, // "name": "value"
+                //     });
+                //     setOption(obj.data.ICCID, data.number);
+                // });
+                form.on('select(role)', function (data) {
+                    // layer.msg('选中了：' + data.value + '');
+                    // console.log(form.val("form_add"));
+                    vue.role = data.value;
+                    vue.$nextTick(function () {
+                        form.render();
+                    })
+                });
+
+                form.on('submit(save)', function (data) {
+                    var id = data.field.id
+                        , role = data.field.role
+                        , agent = data.field.agent
+                        , station = data.field.station
+                        , username = data.field.username
+                        , realname = data.field.realname;
+                    $.ajax({
+                        url: 'settings/users/save',
+                        type: 'POST',
+                        data: {
+                            id: id
+                            , role: role
+                            , agent: agent
+                            , station: station
+                            , username: username
+                            , realname: realname
+                        },
+                        dataType: "json",
+                        beforeSend: function () {
+                            $('#btn_sub').addClass("layui-btn-disabled");
+                        },
+                        success:
+                            function (response) {
+                                if (response.result) {
+                                    layer.alert(response.message, {
+                                        icon: 1,
+                                        shadeClose: true,
+                                        title: "提示"
+                                    }, function (index) {
+                                        $('#btn_reset').click();
+                                        layui.form.render();
+                                        layer.close(index);
+                                        layer.close(layer_form_index);
+                                        table.reload('table', {
+                                            where: {date: new Date()} //设定异步数据接口的额外参数
+                                            //,height: 300
+                                        });
+                                    });
+                                } else {
+                                    if (response.action === "confirm") {
+                                        layer.confirm(response.message, {
+                                            btn: ['继续', '取消'] //按钮
+                                        }, function (index1) {
+                                            // alert(IMEI);
+                                            $.ajax({
+                                                type: "POST",                   //提交方式
+                                                url: "/settings/station/unbind",   //提交的页面/方法名
+                                                data: {IMEI: IMEI},
+                                                success: function (response_unbind) {
+                                                    if (response_unbind.result) {
+                                                        layer.alert(response_unbind.message, {
+                                                            icon: 1,
+                                                            shadeClose: true,
+                                                            title: "提示"
+                                                        });
+                                                    }
+                                                    // $('#table').bootstrapTable('refresh');
+                                                }
+                                                // ,complete:function () {
+                                                //     layer.close(index1);
+                                                // }
+                                            });
+                                            layer.close(index1);
+                                        }, function () {
+                                            layer.msg('操作取消', {
+                                                time: 2000 //20s后自动关闭
+                                            });
+                                        });
+                                    } else {
+                                        layer.alert(response.message, {
+                                            icon: 2,
+                                            shadeClose: true,
+                                            title: "提示"
+                                        });
+                                    }
+                                }
+                            },
+                        complete: function () {
+                            $('#btn_sub').removeClass("layui-btn-disabled");
+                        }
+                    })
+                    ;
+                    return false;
+                });
+                // $('#map_canvas').height($('#mainFrame', parent.document).height() - 103);
+
+            });
+
+
+        </script>
+    </body>
+</html>

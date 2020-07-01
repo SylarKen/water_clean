@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sylar.water_clean.dao.System.UserDao">
+    <select id="getUser" resultType="com.sylar.water_clean.models.User" parameterType="String">
+        SELECT a.*, b.*
+        FROM t_sys_user a
+                 LEFT JOIN t_sys_role b ON a.role_code = b.`code`
+        WHERE (a.username = #{username} or a.phone = #{username})
+    </select>
+
+    <select id="getRole" resultType="com.sylar.water_clean.models.Role" parameterType="String">
+        SELECT *
+        FROM t_sys_role a
+        WHERE `code` = #{role_code}
+    </select>
+
+    <select id="getRoleActions" resultType="String" parameterType="String">
+        SELECT a.url
+        FROM t_sys_menu a
+                 LEFT JOIN t_sys_rights b on a.id = b.menuId
+        WHERE a.url is NOT NULL
+          AND a.url != ''
+          AND b.role_code = #{role_code}
+    </select>
+
+    <select id="getRoleMenus" resultType="com.sylar.water_clean.models.Menu" parameterType="int">
+        SELECT a.*
+        FROM t_sys_menu a
+                 JOIN t_sys_rights b ON b.menuId = a.menuId
+        WHERE b.roleId = #{role}
+          AND a.delete_flag = 0
+          AND a.menuType = 1
+        ORDER BY a.menuOrder DESC, a.createTime ASC
+    </select>
+
+    <select id="GetUsers" resultType="map">
+        SELECT u.*, r.`name` AS role_name
+        FROM t_sys_user u
+                 LEFT JOIN t_sys_role r ON r.`code` = u.role_code
+    </select>
+
+    <select id="Check_Username" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM t_sys_user
+        WHERE 1 = 1
+          AND `username` = #{username}
+    </select>
+
+    <select id="Check_Realname" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM t_sys_user
+        WHERE 1 = 1
+          AND `realname` = #{realname}
+    </select>
+
+    <insert id="Insert" parameterType="map">
+        INSERT INTO `t_sys_user` (`username`,
+                                  `password`,
+                                  `realname`,
+                                  `agent_id`,
+                                  `station_id`,
+                                  `phone`,
+                                  `sex`,
+                                  `dept`,
+                                  `role_code`,
+                                  `creator`,
+                                  `createTime`,
+                                  `available`)
+        VALUES (#{params.username},
+                #{params.password},
+                #{params.realname},
+                #{params.agent},
+                #{params.station},
+                NULL,
+                NULL,
+                NULL,
+                #{params.role},
+                '',
+                NOW(),
+                '1');
+    </insert>
+
+    <update id="Update" parameterType="map">
+        UPDATE `t_sys_user`
+        SET `agent_id`   = #{params.agent},
+            `station_id` = #{params.station},
+            `role_code`  = #{params.role},
+            `editTime`   = NOW(),
+            `available`  = '1'
+        WHERE (`id` = #{params.id});
+    </update>
+
+    <delete id="Delete" parameterType="map">
+        DELETE
+        FROM `t_sys_user`
+        WHERE id = #{id}
+    </delete>
+
+    <update id="Reset" parameterType="map">
+        UPDATE `t_sys_user`
+        SET `password` = '4QrcOUm6Wau+VuBX8g+IPg=='
+        where id = #{id}
+    </update>
+
+    <update id="ChangePwd" parameterType="map">
+        UPDATE `t_sys_user`
+        SET `password` = #{password}
+        where username = #{username}
+    </update>
+</mapper>

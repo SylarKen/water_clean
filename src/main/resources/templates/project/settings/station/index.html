@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="UTF-8">
+        <title>站点维护</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <base th:href="${#request.getContextPath()}+'/'">
+
+        <script th:src="@{/my/plugins/jquery/dist/jquery.js}"></script>
+        <script th:src="@{/my/plugins/vue/dist/vue.js}"></script>
+        <link rel="stylesheet" th:href="@{/my/plugins/layui-v2.5.5/layui/css/layui.css}">
+        <link rel="stylesheet" th:href="@{/my/plugins/layuiadmin/style/admin.css}">
+        <script th:src="@{/my/plugins/layui-v2.5.5/layui/layui.js}"></script>
+        <script type="text/javascript"
+                src="http://api.map.baidu.com/api?v=2.0&ak=bYBuE9PQIvqTOtgdchD3Tr9FGH93o9hh"></script>
+    </head>
+    <body class="layui-layout-body">
+        <div class="layui-fluid" id="app">
+            <div class="layui-row layui-col-space15">
+                <div class="layui-col-md12">
+                    <div class="layui-card-header">当前数据</div>
+                    <div class="layui-card-body">
+                        <div class="layui-carousel layadmin-carousel layadmin-dataview" data-anim="fade"
+                             lay-filter="LAY-index-normline">
+                            <table class="layui-hide" id="table" lay-filter="table"></table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <script type="text/html" id="toolbar">
+            <div class="layui-btn-container">
+                <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+                <button class="layui-btn layui-btn-danger layui-btn-sm" lay-event="delete">删除</button>
+            </div>
+        </script>
+        <script type="text/html" id="barButton">
+            <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+        </script>
+        <div class="layui-fluid" id="form_add" hidden="hidden">
+            <div class="layui-row layui-col-space15">
+                <div class="layui-col-sm6">
+                    <div class="layui-card">
+                        <div class="layui-card-header">站点位置</div>
+                        <div class="layui-card-body">
+                            <div id="map_canvas" class="baidu-maps"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-sm6">
+                    <div class="layui-card">
+                        <div class="layui-card-header">站点信息</div>
+                        <div class="layui-card-body">
+                            <form class="layui-form" lay-filter="form_add">
+                                <div class="layui-form-item">
+                                    <input type="text" name="id" id="id" hidden="hidden"
+                                           placeholder="ID" autocomplete="off" class="">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">省份</label>
+                                        <div class="layui-input-inline">
+                                            <select name="province_code" lay-search="" lay-filter="province">
+                                                <option value="">直接选择或搜索选择</option>
+                                                <option v-for="p in provinces" :value="p.id">{{p.text}}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">城市</label>
+                                        <div class="layui-input-inline">
+                                            <select name="city_code" lay-filter="city">
+                                                <option value="">直接选择或搜索选择</option>
+                                                <option v-for="c in cities_list"
+                                                        :value="c.id">{{c.text}}
+                                                </option>
+                                                <!--<option value="1">1</option>-->
+                                                <!--<option value="2">2</option>-->
+                                                <!--<option value="3">3</option>-->
+                                                <!--<option value="4">4</option>-->
+                                                <!--<option value="5">5</option>-->
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">管理组</label>
+                                        <div class="layui-input-inline">
+                                            <select name="agent_id" lay-filter="agent_id">
+                                                <option value="">直接选择或搜索选择</option>
+                                                <option v-for="g in group_list"
+                                                        :value="g.id">{{g.text}}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">经度</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="longitude" id="longitude" readonly="readonly"
+                                                   placeholder="在地图上点选" autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">纬度</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="latitude" id="latitude" readonly="readonly"
+                                                   placeholder="在地图上点选" autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">网关编号</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="IMEI" id="IMEI"
+                                                   placeholder="网关编号" autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">站点编号</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="code" id="code"
+                                                   placeholder="站点编号" autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">站点名称</label>
+                                        <div class="layui-input-inline">
+                                            <input type="text" name="name" id="name"
+                                                   placeholder="站点名称" autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label">设备数量</label>
+                                        <div class="layui-input-inline">
+                                            <input type="number" name="quantity" id="quantity"
+                                                   placeholder="设备数量" autocomplete="off" min="0" class="layui-input">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+
+
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-input-block">
+                                        <button type="button" class="layui-btn" id="btn_sub" lay-submit=""
+                                                lay-filter="save">保存
+                                        </button>
+                                        <button type="reset" class="layui-btn layui-btn-primary" id="btn_reset"
+                                                name="btn_reset">重置
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+
+            var vue = new Vue({
+                el: '#form_add',
+                data: {
+                    provinces: [],
+                    cities: [],
+                    cities_list: [],
+                    province_selected: "",
+                    group_list: []
+                },
+                mounted: function () {
+
+                },
+                methods: {
+                    get_areas: function (id) {
+                        var _this = this;
+                        $.ajax({
+                            url: 'common/droplist/getareas',
+                            type: 'POST',
+                            data: {equipment_code: id},
+                            dataType: "json",
+                            success: function (response) {
+                                if (response.result) {
+                                    _this.provinces = response.data.provinces;
+                                    _this.cities = response.data.cities;
+                                    _this.$nextTick(function () {
+                                        form.render();
+                                    })
+                                }
+                            }
+                        });
+                        $.ajax({
+                            url: 'common/droplist/getagents',
+                            type: 'POST',
+                            data: {equipment_code: id},
+                            dataType: "json",
+                            success: function (response) {
+                                if (response.result) {
+                                    _this.group_list = response.data.group_list;
+                                    _this.$nextTick(function () {
+                                        form.render();
+                                    })
+                                }
+                            }
+                        });
+                    },
+                    get_city_list: function (pcode, cityCode) {
+                        var _this = this;
+                        _this.cities_list = _this.cities.filter(function (value) {
+                            return value.pcode === pcode;
+                        });
+                        _this.$nextTick(function () {
+
+                            form.render('select');
+                            if (_this.cities_list.length > 0) {
+                                form.val("form_add", {
+                                    city_code: cityCode
+                                });
+                                if (cityCode) {
+                                    var city = _this.cities_list.filter(
+                                        function (v) {
+                                            return v.id === cityCode;
+                                        }
+                                    );
+                                    if (city && city.length > 0) {
+                                        map.centerAndZoom(city[0].text, 9);
+                                    }
+
+                                } else {
+                                    map.centerAndZoom(_this.cities_list[0].text, 7);
+                                }
+                            }
+                            else {
+                                var point = new BMap.Point(107.251614, 35.455844);
+                                map.centerAndZoom(point, 5);
+                            }
+                        })
+                    }
+                }
+            });
+
+            layui.config({
+                base: '/my/plugins/layui-2.5.5/' //静态资源所在路径
+            })
+            // .extend({
+            //     index: 'lib/index' //主入口模块
+            // }).use(['index', 'senior']);
+
+            layui.use(['table', 'form'], function () {
+                var $ = layui.$; //重点处
+                var table = layui.table;
+                var form = layui.form;
+                var layer = layui.layer;
+                var layer_form_index;
+                window.form = form;
+                vue.get_areas();
+
+                var openForm = function (data) {
+                    layer_form_index = layer.open({
+                        title: '页面层'
+                        , type: 1
+                        //,skin: 'layui-layer-rim'
+                        , shadeClose: true
+                        , area: ['100%', '100%']
+                        // , content: $('#form_add_html')[0].innerHTML
+                        , content: $('#form_add')
+                        , success: function (layero, index) {
+
+                            $('#map_canvas').height(($('#form_add').parent().height() - 93));// / 2
+                            var map = new BMap.Map("map_canvas");
+                            window.map = map;
+                            map.enableScrollWheelZoom();
+                            map.addControl(new BMap.NavigationControl());
+                            map.addControl(new BMap.MapTypeControl());
+                            var point = new BMap.Point(107.251614, 35.455844);
+                            map.centerAndZoom(point, 5);
+                            var geoc = new BMap.Geocoder();
+                            map.addEventListener("click", function (e) {
+                                var data = form.val("form_add");
+                                if (data.province_code === undefined || data.province_code === "") {
+                                    alert("请先选择省份");
+                                    return;
+                                }
+                                if (data.city_code === undefined || data.city_code === "") {
+                                    alert("请先选择城市");
+                                    return;
+                                }
+                                map.clearOverlays();
+                                var pt = e.point;
+                                marker = new BMap.Marker(pt);
+                                map.addOverlay(marker);
+                                // alert(e.point.lng + "," + e.point.lat);
+                                form.val("form_add", {
+                                    // location: e.point.lng + "," + e.point.lat
+                                    latitude: pt.lat
+                                    , longitude: pt.lng
+                                });
+
+                            });
+                            if (data) {
+                                form.val('form_add', {
+                                    id: data.id
+                                    , IMEI: data.IMEI
+                                    , latitude: data.latitude
+                                    , longitude: data.longitude
+                                    , province_code: data.province_code
+                                    , city_code: data.city_code
+                                    , quantity: data.quantity
+                                    , code: data.code
+                                    , name: data.name
+                                    , agent_id: data.agent_id
+                                });
+                                vue.get_city_list(data.province_code, data.city_code);
+                                var p = new BMap.Point(data.longitude, data.latitude);
+                                // map.centerAndZoom(p, 5);
+                                marker = new BMap.Marker(p);
+                                map.addOverlay(marker);
+                            }
+                        }
+                        , end: function () {
+                            $('#btn_reset').click();
+                            vue.cities_list = [];
+                            form.render();
+                            layer.close(layer_form_index);
+                        }
+                    });
+
+                };
+                form.render('select');
+
+                table.render({
+                    elem: '#table',
+                    url: '/settings/station/getStation',
+                    where: {date: new Date()},
+                    toolbar: '#toolbar',//开启头部工具栏，并为其绑定左侧模板
+                    defaultToolbar: ['filter', 'exports', 'print', {
+                        title: '刷新' //标题
+                        , layEvent: 'LAYTABLE_UPDATE' //事件名，用于 toolbar 事件中使用
+                        , icon: 'layui-icon-refresh-3' //图标类名
+                    }
+                    ],
+                    title: '站点管理',
+                    cols: [
+                        [
+                            {type: 'checkbox', fixed: 'left'},
+                            // {field: 'id', title: 'ID', width: 80, fixed: 'left', unresize: true, sort: true},
+                            {field: 'name', title: '站点名称', sort: true},
+                            {field: 'code', title: '站点编号', sort: true},
+                            {field: 'IMEI', title: '网关编号', sort: true},
+                            {field: 'location', title: '所在地', sort: true},
+                            {field: 'coordinate', title: '经纬度', sort: true},
+                            {field: 'quantity', title: '设备数量'},
+                            {fixed: 'right', title: '操作', toolbar: '#barButton', width: 150}
+
+                        ]
+                    ],
+                    page: true
+                });
+                //头工具栏事件
+                table.on('toolbar(table)', function (obj) {
+                    var checkStatus = table.checkStatus(obj.config.id);
+                    switch (obj.event) {
+                        case 'add':
+                            openForm();
+                            // layer_form_index = layer.open({
+                            //     title: '页面层'
+                            //     , type: 1
+                            //     //,skin: 'layui-layer-rim'
+                            //     , shadeClose: true
+                            //     , area: ['100%', '100%']
+                            //     // , content: $('#form_add_html')[0].innerHTML
+                            //     , content: $('#form_add')
+                            //     , success: function (layero, index) {
+                            //
+                            //
+                            //         $('#map_canvas').height(($('#form_add').parent().height() - 93));// / 2
+                            //         var map = new BMap.Map("map_canvas");
+                            //         window.map = map;
+                            //         map.enableScrollWheelZoom();
+                            //         map.addControl(new BMap.NavigationControl());
+                            //         map.addControl(new BMap.MapTypeControl());
+                            //         var point = new BMap.Point(107.251614, 35.455844);
+                            //         map.centerAndZoom(point, 5);
+                            //         var geoc = new BMap.Geocoder();
+                            //         map.addEventListener("click", function (e) {
+                            //             var data = form.val("form_add");
+                            //             if (data.province_code === undefined || data.province_code === "") {
+                            //                 alert("请先选择省份");
+                            //                 return;
+                            //             }
+                            //             if (data.city_code === undefined || data.city_code === "") {
+                            //                 alert("请先选择城市");
+                            //                 return;
+                            //             }
+                            //             var pt = e.point;
+                            //             // alert(e.point.lng + "," + e.point.lat);
+                            //             form.val("form_add", {
+                            //                 // location: e.point.lng + "," + e.point.lat
+                            //                 latitude: pt.lat
+                            //                 , longitude: pt.lng
+                            //             });
+                            //             // geoc.getLocation(pt, function (rs) {
+                            //             //     var addComp = rs.addressComponents;
+                            //             //     alert(addComp.province + ", " + addComp.city + ", " + addComp.district + ", " + addComp.street + ", " + addComp.streetNumber);
+                            //             //     // var province = data.elem[data.elem.selectedIndex].text;
+                            //             //     // var city = data.elem[data.elem.selectedIndex].text;
+                            //             //     form.val("form_add", {
+                            //             //         // location: e.point.lng + "," + e.point.lat
+                            //             //         latitude: pt.lat
+                            //             //         , longitude: pt.lng
+                            //             //         , province_code: addComp.province
+                            //             //         , city_code: addComp.city
+                            //             //     });
+                            //             // });
+                            //         });
+                            //
+                            //     }
+                            // });
+
+                            break;
+                        case 'getCheckLength':
+                            var data = checkStatus.data;
+                            layer.msg('选中了：' + data.length + ' 个');
+                            break;
+                        case 'isAll':
+                            layer.msg(checkStatus.isAll ? '全选' : '未全选');
+                            break;
+
+                        //自定义头工具栏右侧图标 - 提示
+                        case 'LAYTABLE_UPDATE':
+                            // layer.alert('这是工具栏右侧自定义的一个图标按钮');
+                            // $(".layui-laypage-btn").click();
+                            // break;
+                            table.reload('table', {
+                                where: {date: new Date()} //设定异步数据接口的额外参数
+                                //,height: 300
+                            });
+                            break;
+                    }
+                });
+
+
+                //监听行工具事件
+                table.on('tool(table)', function (obj) {
+                    var data = obj.data;
+                    //console.log(obj)
+                    if (obj.event === 'del') {
+                        layer.confirm('真的删除行么', function (index) {
+                            $.post({
+                                url: 'settings/station/delete',
+                                data: {id: data.id},
+                                success: function (response) {
+                                    if (response.result) {
+                                        layer.alert(response.message, {
+                                            icon: 1,
+                                            shadeClose: true,
+                                            title: "提示"
+                                        }, function (index) {
+                                            layer.close(index);
+                                            table.reload('table', {
+                                                where: {date: new Date()} //设定异步数据接口的额外参数
+                                            });
+                                        });
+                                    } else {
+                                    }
+                                },
+                                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                    layer.alert('请求失败', {
+                                        icon: 2,
+                                        shadeClose: true,
+                                        title: "提示"
+                                    });
+                                },
+                                complete: function () {
+                                    layer.close(index);
+                                }
+                            });
+                            // obj.del();
+                            // layer.close(index);
+                        });
+                    } else if (obj.event === 'edit') {
+                        openForm(data);
+                        // layer_form_index = layer.open({
+                        //     title: '页面层'
+                        //     , type: 1
+                        //     //,skin: 'layui-layer-rim'
+                        //     , shadeClose: true
+                        //     , area: ['100%', '100%']
+                        //     // , content: $('#form_add_html')[0].innerHTML
+                        //     , content: $('#form_add')
+                        //     , success: function (layero, index) {
+                        //         form.val('form_add', {
+                        //             id: data.id
+                        //             , IMEI: data.IMEI
+                        //             , latitude: data.latitude
+                        //             , longitude: data.longitude
+                        //             , province_code: data.province_code
+                        //             , city_code: data.city_code
+                        //             , quantity: data.quantity
+                        //             , code: data.code
+                        //             , name: data.name
+                        //             , agent_id: data.agent_id
+                        //         })
+                        //         vue.get_city_list(data.province_code, data.city_code);
+                        //         $('#map_canvas').height(($('#form_add').parent().height() - 93));// / 2
+                        //         var map = new BMap.Map("map_canvas");
+                        //         window.map = map;
+                        //         map.enableScrollWheelZoom();
+                        //         map.addControl(new BMap.NavigationControl());
+                        //         map.addControl(new BMap.MapTypeControl());
+                        //         var point = new BMap.Point(107.251614, 35.455844);
+                        //         map.centerAndZoom(point, 5);
+                        //         var geoc = new BMap.Geocoder();
+                        //         map.addEventListener("click", function (e) {
+                        //             var data = form.val("form_add");
+                        //             if (data.province_code === undefined || data.province_code === "") {
+                        //                 alert("请先选择省份");
+                        //                 return;
+                        //             }
+                        //             if (data.city_code === undefined || data.city_code === "") {
+                        //                 alert("请先选择城市");
+                        //                 return;
+                        //             }
+                        //             var pt = e.point;
+                        //             // alert(e.point.lng + "," + e.point.lat);
+                        //             form.val("form_add", {
+                        //                 // location: e.point.lng + "," + e.point.lat
+                        //                 latitude: pt.lat
+                        //                 , longitude: pt.lng
+                        //             });
+                        //         });
+                        //
+                        //     }
+                        // });
+
+                    }
+                });
+
+                // table.on('row(table)', function (obj) {
+                //     layer.msg('选中了：' + obj.data.ICCID + '');
+                //     var data = form.val('form_search', {
+                //         "tx_iccid": obj.data.ICCID, // "name": "value"
+                //     });
+                //     setOption(obj.data.ICCID, data.number);
+                // });
+
+                form.on('select(province)', function (data) {
+                    // layer.msg('选中了：' + data.value + '');
+                    // console.log(form.val("form_add"));
+                    form.val("form_add", {
+                        city_code: ""
+                    });
+                    vue.get_city_list(data.value);
+
+                });
+                form.on('select(city)', function (data) {
+                    var city = data.elem[data.elem.selectedIndex].text;
+                    map.centerAndZoom(city, 9);
+
+
+                });
+                form.on('submit(save)', function (data) {
+                    var id = data.field.id
+                        , IMEI = data.field.IMEI
+                        , latitude = data.field.latitude
+                        , longitude = data.field.longitude
+                        , province_code = data.field.province_code
+                        , city_code = data.field.city_code
+                        , quantity = data.field.quantity
+                        , code = data.field.code
+                        , name = data.field.name
+                        , agent_id = data.field.agent_id;
+                    $.ajax({
+                        url: 'settings/station/save',
+                        type: 'POST',
+                        data: {
+                            id: id
+                            , IMEI: IMEI
+                            , latitude: latitude
+                            , longitude: longitude
+                            , province_code: province_code
+                            , city_code: city_code
+                            , quantity: quantity
+                            , code: code
+                            , name: name
+                            , agent_id: agent_id
+                        },
+                        dataType: "json",
+                        beforeSend: function () {
+                            $('#btn_sub').addClass("layui-btn-disabled");
+                        },
+                        success:
+                            function (response) {
+                                if (response.result) {
+                                    layer.alert(response.message, {
+                                        icon: 1,
+                                        shadeClose: true,
+                                        title: "提示"
+                                    }, function (index) {
+                                        $('#btn_reset').click();
+                                        layui.form.render();
+                                        layer.close(index);
+                                        layer.close(layer_form_index);
+                                        table.reload('table', {
+                                            where: {date: new Date()} //设定异步数据接口的额外参数
+                                            //,height: 300
+                                        });
+                                    });
+                                } else {
+                                    if (response.action === "confirm") {
+                                        layer.confirm(response.message, {
+                                            btn: ['继续', '取消'] //按钮
+                                        }, function (index1) {
+                                            // alert(IMEI);
+                                            $.ajax({
+                                                type: "POST",                   //提交方式
+                                                url: "/settings/station/unbind",   //提交的页面/方法名
+                                                data: {IMEI: IMEI},
+                                                success: function (response_unbind) {
+                                                    if (response_unbind.result) {
+                                                        layer.alert(response_unbind.message, {
+                                                            icon: 1,
+                                                            shadeClose: true,
+                                                            title: "提示"
+                                                        });
+                                                    }
+                                                    // $('#table').bootstrapTable('refresh');
+                                                }
+                                                // ,complete:function () {
+                                                //     layer.close(index1);
+                                                // }
+                                            });
+                                            layer.close(index1);
+                                        }, function () {
+                                            layer.msg('操作取消', {
+                                                time: 2000 //20s后自动关闭
+                                            });
+                                        });
+                                    } else {
+                                        layer.alert(response.message, {
+                                            icon: 2,
+                                            shadeClose: true,
+                                            title: "提示"
+                                        });
+                                    }
+                                }
+                            },
+                        complete: function () {
+                            $('#btn_sub').removeClass("layui-btn-disabled");
+                        }
+                    })
+                    ;
+                    return false;
+                });
+                // $('#map_canvas').height($('#mainFrame', parent.document).height() - 103);
+
+            });
+
+
+        </script>
+
+    </body>
+</html>

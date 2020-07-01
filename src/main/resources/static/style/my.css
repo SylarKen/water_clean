@@ -1,0 +1,17 @@
+/************iframe页面样式 begin*******************/
+.frame-content{ padding: 15px !important; width:100%; height: 100%; box-sizing:border-box; }
+
+/************列表页面查询表单样式*********************/
+.layui-form-item-customer{ margin-bottom:10px !important; margin-top: 5px; }
+
+/*************解决table出现横向滚动条的BUG*************/
+.layui-table-body{overflow-x: hidden;}
+
+/************右侧弹出表单样式 begin*******************/
+.dialog-form{ border-top: 1px solid #ebebf0}
+.dialog-form .layui-card-header{ color: #009688; border-bottom: 1px solid #ebebf0}
+.dialog-form .layui-row{ border-left: 1px solid #ebebf0; border-bottom: 1px solid #ebebf0}
+.dialog-form .layui-col-md12{display: flex; flex-direction: column; padding: 20px; border-right: 1px solid #ebebf0;}
+.dialog-form .layui-col-md6{display: flex; flex-direction: column; padding: 20px; border-right: 1px solid #ebebf0;}
+.dialog-form span{padding-bottom: 5px;}
+/************右侧弹出表单样式 end*******************/
